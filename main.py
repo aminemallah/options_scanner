@@ -1,3 +1,7 @@
+# TO DO
+# exit below earnings
+# keep spreads tight
+
 import traceback
 from ib_insync import IB, Stock, Option
 import pandas as pd
@@ -5,6 +9,13 @@ import yfinance as yf
 from volatile_tickers import volatile_tickers
 from datetime import datetime, timedelta
 import logging
+
+DELTA = 0.25
+CAPITAL = 60000
+EXPIRY_START = 5
+EXPIRY_END = 40
+RETURN_PER_DAY = 0.06
+RETURN_TOTAL_DAYS = 30
 
 logging.basicConfig(
     level=logging.INFO, 
@@ -28,14 +39,10 @@ class OptionFetcher:
         self.ib.disconnect()
 
     def fetch_put_options_with_low_delta(self, ticker_symbol):
-        """
-        Fetches put options with delta < 0.15 for a given stock ticker.
-
-        Args:
-            ticker_symbol (str): The stock ticker symbol to fetch options for.
-        """
         try:
-            market_price = yf.Ticker(ticker_symbol).history(period='1d')['Close'].iloc[-1]
+            stock_yf = yf.Ticker(ticker_symbol)
+            market_price = stock_yf.history(period='1d')['Close'].iloc[-1]
+  
             stock = Stock(ticker_symbol, 'SMART', 'USD')
             self.ib.qualifyContracts(stock)
 
@@ -50,11 +57,11 @@ class OptionFetcher:
                 return
 
             today = datetime.now()
-            min_date = int((today + timedelta(days=25)).strftime('%Y%m%d'))
-            max_date = int((today + timedelta(days=47)).strftime('%Y%m%d'))
+            min_date = int((today + timedelta(days=EXPIRY_START)).strftime('%Y%m%d'))
+            max_date = int((today + timedelta(days=EXPIRY_END)).strftime('%Y%m%d'))
             expirations = [int(exp) for exp in chain.expirations if min_date <= int(exp) <= max_date]
 
-            strikes = [strike for strike in chain.strikes if market_price * 0.95 < strike <= market_price * 0.98]
+            strikes = [strike for strike in chain.strikes if market_price * 0.96 < strike <= market_price * 0.99]
 
             contracts = [Option(stock.symbol, expiration, strike, 'P', 'SMART')
                          for expiration in expirations for strike in strikes]
@@ -66,12 +73,21 @@ class OptionFetcher:
             self.ib.reqMarketDataType(4)  # Delayed market data
             for contract in contracts:
                 market_data = self.ib.reqMktData(contract, '', snapshot=True)
-                self.ib.sleep(5)
+                self.ib.sleep(10)
                 logging.info(market_data)
                 if market_data.modelGreeks:
                     delta = market_data.modelGreeks.delta
                     bid_price = market_data.bid
-                    if delta and abs(delta) < 0.5 and bid_price * 100 > 100:
+                    ask_price = market_data.ask
+                    strike_price = contract.strike
+                    percentage_return = (bid_price/strike_price)* 100
+
+                    expiration_date = datetime.strptime(contract.lastTradeDateOrContractMonth, '%Y%m%d')
+                    days_till_expiration = (expiration_date - datetime.today()).days
+                    required_total_return = RETURN_PER_DAY * days_till_expiration
+
+                    if delta and abs(delta) < DELTA and percentage_return >= required_total_return:
+                        logging.info("CONTRACT PASSED")
                         obj = {
                             'ticker': ticker_symbol,
                             'expiration': contract.lastTradeDateOrContractMonth,
@@ -81,6 +97,9 @@ class OptionFetcher:
                             'lastPrice': market_data.last,
                             'bid': market_data.bid,
                             'ask': market_data.ask,
+                            f"percentageReturnPer{RETURN_TOTAL_DAYS}Days": (percentage_return/days_till_expiration)*RETURN_TOTAL_DAYS,
+                            "premiumPerDay": (bid_price*100)/days_till_expiration,
+                            "premiumTotal": bid_price*100
                         }
                         logging.info(obj)
                         print(obj)
