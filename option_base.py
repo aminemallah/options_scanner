@@ -28,11 +28,13 @@ class OptionBase:
     def disconnect(self):
         self.ib.disconnect()
 
-    def fetch_options_data(self, ticker_symbol, expiry_start, expiry_end):
-        try:
-            stock_yf = yf.Ticker(ticker_symbol)
-            market_price = stock_yf.history(period='1d')['Close'].iloc[-1]
+    def get_stock_price(self, ticker_symbol):
+        stock_yf = yf.Ticker(ticker_symbol)
+        market_price = stock_yf.history(period='1d')['Close'].iloc[-1]
+        return market_price
 
+    def fetch_options_data(self, ticker_symbol, stock_price, expiry_start, expiry_end):
+        try:
             stock = Stock(ticker_symbol, 'SMART', 'USD')
             self.ib.qualifyContracts(stock)
 
@@ -51,7 +53,7 @@ class OptionBase:
             max_date = int((today + timedelta(days=expiry_end)).strftime('%Y%m%d'))
             expirations = [int(exp) for exp in chain.expirations if min_date <= int(exp) <= max_date]
 
-            strikes = [strike for strike in chain.strikes if market_price * 0.96 < strike <= market_price * 0.99]
+            strikes = [strike for strike in chain.strikes if stock_price * 0.96 < strike <= stock_price * 0.99]
 
             contracts = [Option(stock.symbol, expiration, strike, 'P', 'SMART')
                          for expiration in expirations for strike in strikes]
@@ -77,6 +79,7 @@ class OptionBase:
         self.connect()
         for ticker in tickers:
             self.logger.info(f"Processing ticker: {ticker}")
-            self.fetch_put_options_with_low_delta(ticker)
+            stock_price = self.get_stock_price(ticker)
+            self.fetch_put_options_with_low_delta(ticker, stock_price)
         self.disconnect()
         self.save_to_excel()
