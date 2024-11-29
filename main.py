@@ -5,7 +5,6 @@
 from option_base import OptionBase
 from volatile_tickers import volatile_tickers
 from datetime import datetime
-from logger_config import logger
 
 DELTA = 0.25
 EXPIRY_START = 2
@@ -25,6 +24,9 @@ class LowDeltaOptionFetcher(OptionBase):
         for contract in contracts:
             market_data = self.ib.reqMktData(contract, '', snapshot=True)
             self.ib.sleep(10)
+            self.logger.info(market_data)
+            self.ib.cancelMktData(contract)
+            self.ib.sleep(2)
 
             if market_data.modelGreeks:
                 delta = market_data.modelGreeks.delta
@@ -36,7 +38,7 @@ class LowDeltaOptionFetcher(OptionBase):
                 required_total_return = RETURN_PER_DAY * days_till_expiration
 
                 if delta and abs(delta) < DELTA and percentage_return >= required_total_return:
-                    logger.info("CONTRACT PASSES")
+                    self.logger.info("CONTRACT PASSES")
                     obj = {
                         'ticker': ticker_symbol,
                         'expiration': contract.lastTradeDateOrContractMonth,
