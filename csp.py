@@ -2,13 +2,14 @@
 # exit below earnings
 # keep spreads tight
 
+import traceback
 from option_base import OptionBase
 from volatile_tickers import volatile_tickers
 from datetime import datetime
 
-DELTA = 0.26
+DELTA = 0.8
 EXPIRY_START = 2
-EXPIRY_END = 20
+EXPIRY_END = 15
 RETURN_PER_DAY = 0.06
 RETURN_TOTAL_DAYS = 30
 
