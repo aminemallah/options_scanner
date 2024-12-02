@@ -79,9 +79,9 @@ class OptionBase:
         self.connect()
         for ticker in tickers:
             try:
-                self.logger.info(f"Processing ticker: {ticker}")
-                stock_price = self.get_stock_price(ticker)
-                self.fetch_put_options_with_low_delta(ticker, stock_price)
+                self.logger.info(f"Processing ticker: {ticker['symbol']}")
+                stock_price = self.get_stock_price(ticker['symbol'])
+                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price)
             except Exception as e:
                 self.logger.error(e)
                 traceback.print_exc()

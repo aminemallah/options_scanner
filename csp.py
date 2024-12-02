@@ -4,7 +4,7 @@
 
 import traceback
 from option_base import OptionBase
-from volatile_tickers import volatile_tickers
+# from volatile_tickers import volatile_tickers
 from datetime import datetime
 
 DELTA = 0.8
@@ -68,5 +68,10 @@ class LowDeltaOptionFetcher(OptionBase):
 
 
 if __name__ == "__main__":
+
+    from fetch_stocks import MarketChameleonScraper
+    stocks_fetcher = MarketChameleonScraper()
+    volatile_tickers = stocks_fetcher.load_page()
+
     fetcher = LowDeltaOptionFetcher()
     fetcher.process_tickers(volatile_tickers)
