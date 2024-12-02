@@ -4,7 +4,7 @@
 from option_base import OptionBase
 from datetime import datetime
 from datetime import datetime, timedelta
-
+import json
 
 DELTA = 0.3
 EXPIRY_START = 2
@@ -66,10 +66,10 @@ class LowDeltaOptionFetcher(OptionBase):
 
 if __name__ == "__main__":
 
-    from volatile_tickers import volatile_tickers
+    # from volatile_tickers import volatile_tickers
     from fetch_stocks import MarketChameleonScraper
     stocks_fetcher = MarketChameleonScraper()
     volatile_tickers = stocks_fetcher.load_page()
 
     fetcher = LowDeltaOptionFetcher()
-    fetcher.process_tickers(volatile_tickers)
+    fetcher.process_tickers(json.loads(volatile_tickers))
