@@ -81,7 +81,7 @@ class OptionBase:
             try:
                 self.logger.info(f"Processing ticker: {ticker['symbol']}")
                 stock_price = self.get_stock_price(ticker['symbol'])
-                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price)
+                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price, ticker['earnings_date'])
             except Exception as e:
                 self.logger.error(e)
                 traceback.print_exc()
