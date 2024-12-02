@@ -103,6 +103,7 @@ class MarketChameleonScraper:
 
     def close(self):
         """Close the Selenium WebDriver."""
+        self.driver.close()
         self.driver.quit()
 
 if __name__ == "__main__":
