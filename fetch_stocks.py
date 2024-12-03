@@ -13,12 +13,12 @@ import undetected_chromedriver as uc
 class MarketChameleonScraper:
     def __init__(self, driver_path=None):
         """Initialize the Selenium WebDriver."""
-        self.driver = uc.Chrome(headless=False,use_subprocess=False)
-
+        self.driver = uc.Chrome(headless=False, use_subprocess=False)
         self.wait = WebDriverWait(self.driver, 20)
 
     def load_page(self, url="https://marketchameleon.com/volReports/VolatilityRankings"):
         self.driver.get(url)
+        time.sleep(200)
         self.wait_for_element(By.CLASS_NAME, "horiz-filter-box")
         self.wait_for_element(By.CSS_SELECTOR, 'table[id="iv_rankings_report_tbl"]')
         time.sleep(5)

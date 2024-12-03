@@ -31,7 +31,7 @@ class LowDeltaOptionFetcher(OptionBase):
         self.ib.reqMarketDataType(4)
         for contract in contracts:
             expiration_date = datetime.strptime(contract.lastTradeDateOrContractMonth, '%Y%m%d')
-            days_till_expiration = (expiration_date - datetime.today()).days
+            days_till_expiration = (expiration_date - datetime.today()).days + 1
             if expiration_date >= min_expiration_date:
                 self.logger.info("CONTRACT FAILS: Expiration date is too close to earnings date.")
                 continue
@@ -65,11 +65,16 @@ class LowDeltaOptionFetcher(OptionBase):
 
 
 if __name__ == "__main__":
-
     # from volatile_tickers import volatile_tickers
     from fetch_stocks import MarketChameleonScraper
     stocks_fetcher = MarketChameleonScraper()
     volatile_tickers = json.loads(stocks_fetcher.load_page())
 
+    from mag7 import stocks
+    volatile_tickers_new = []
+    for volatile_ticker in volatile_tickers:
+        if volatile_ticker['symbol'] in stocks:
+            volatile_tickers_new.append(volatile_ticker)
+
     fetcher = LowDeltaOptionFetcher()
-    fetcher.process_tickers(volatile_tickers)
+    fetcher.process_tickers(volatile_tickers_new)
