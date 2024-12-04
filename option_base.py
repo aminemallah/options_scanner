@@ -28,7 +28,7 @@ class OptionBase:
         self.ib.disconnect()
 
     def get_stock_price(self, ticker_symbol):
-        stock_yf = yf.Ticker(ticker_symbol)
+        stock_yf = yf.Ticker(ticker_symbol.replace(".", "-"))
         market_price = stock_yf.history(period='1d')['Close'].iloc[-1]
         return market_price
 
