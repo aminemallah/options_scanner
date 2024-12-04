@@ -63,6 +63,19 @@ class LowDeltaOptionFetcher(OptionBase):
                     }
                     self.data.append(obj)
 
+    def post_processing(self):
+        import sys
+        sys.path.append('../common')
+        import common_utils
+
+        for data_obj in self.data:
+            if (abs(data_obj['delta']) < 0.2
+                and data_obj[f"percentageReturnPer{RETURN_TOTAL_DAYS}Days"] > 3):
+                message = "\n".join([f"{key}: {value}" for key, value in data_obj.items()])
+                common_utils.notify_message_aleph(
+                    f"{message}"
+                )
+
 
 if __name__ == "__main__":
     # from volatile_tickers import volatile_tickers

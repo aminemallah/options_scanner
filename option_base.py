@@ -12,7 +12,6 @@ logging.basicConfig(
     filemode='w'
 )
 
-
 class OptionBase:
     def __init__(self):
         self.ib = IB()
@@ -87,3 +86,4 @@ class OptionBase:
                 traceback.print_exc()
         self.disconnect()
         self.save_to_excel()
+        self.post_processing()
