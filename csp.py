@@ -70,7 +70,7 @@ class LowDeltaOptionFetcher(OptionBase):
 
         for data_obj in self.data:
             if (abs(data_obj['delta']) < 0.2
-                and data_obj[f"percentageReturnPer{RETURN_TOTAL_DAYS}Days"] > 3):
+                and data_obj[f"percentageReturnPer{RETURN_TOTAL_DAYS}Days"] > 2):
                 message = "\n".join([f"{key}: {value}" for key, value in data_obj.items()])
                 common_utils.notify_message_aleph(
                     f"{message}"
@@ -79,15 +79,15 @@ class LowDeltaOptionFetcher(OptionBase):
 
 if __name__ == "__main__":
     # from volatile_tickers import volatile_tickers
-    # from fetch_stocks import MarketChameleonScraper
-    # stocks_fetcher = MarketChameleonScraper()
-    # volatile_tickers = json.loads(stocks_fetcher.load_page())
+    from fetch_stocks import MarketChameleonScraper
+    stocks_fetcher = MarketChameleonScraper()
+    volatile_tickers = json.loads(stocks_fetcher.load_page())
 
     from mag7 import stocks
-    # volatile_tickers_new = []
-    # for volatile_ticker in volatile_tickers:
-    #     if volatile_ticker['symbol'] in stocks:
-    #         volatile_tickers_new.append(volatile_ticker)
+    volatile_tickers_new = []
+    for volatile_ticker in volatile_tickers:
+        if volatile_ticker['symbol'] in stocks:
+            volatile_tickers_new.append(volatile_ticker)
 
     fetcher = LowDeltaOptionFetcher()
-    fetcher.process_tickers(stocks)
+    fetcher.process_tickers(volatile_tickers_new)
