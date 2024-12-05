@@ -8,7 +8,7 @@ import json
 
 DELTA = 0.3
 EXPIRY_START = 2
-EXPIRY_END = 20
+EXPIRY_END = 35
 RETURN_TOTAL_DAYS = 30
 
 class LowDeltaOptionFetcher(OptionBase):
@@ -79,15 +79,15 @@ class LowDeltaOptionFetcher(OptionBase):
 
 if __name__ == "__main__":
     # from volatile_tickers import volatile_tickers
-    from fetch_stocks import MarketChameleonScraper
-    stocks_fetcher = MarketChameleonScraper()
-    volatile_tickers = json.loads(stocks_fetcher.load_page())
+    # from fetch_stocks import MarketChameleonScraper
+    # stocks_fetcher = MarketChameleonScraper()
+    # volatile_tickers = json.loads(stocks_fetcher.load_page())
 
     from mag7 import stocks
-    volatile_tickers_new = []
-    for volatile_ticker in volatile_tickers:
-        if volatile_ticker['symbol'] in stocks:
-            volatile_tickers_new.append(volatile_ticker)
+    # volatile_tickers_new = []
+    # for volatile_ticker in volatile_tickers:
+    #     if volatile_ticker['symbol'] in stocks:
+    #         volatile_tickers_new.append(volatile_ticker)
 
     fetcher = LowDeltaOptionFetcher()
-    fetcher.process_tickers(volatile_tickers_new)
+    fetcher.process_tickers(stocks)
