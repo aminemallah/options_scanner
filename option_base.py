@@ -52,7 +52,7 @@ class OptionBase:
             max_date = int((today + timedelta(days=expiry_end)).strftime('%Y%m%d'))
             expirations = [int(exp) for exp in chain.expirations if min_date <= int(exp) <= max_date]
 
-            strikes = [strike for strike in chain.strikes if stock_price * 0.96 < strike <= stock_price * 0.99]
+            strikes = [strike for strike in chain.strikes if stock_price * 0.8 < strike <= stock_price]
 
             contracts = [Option(stock.symbol, expiration, strike, 'P', 'SMART')
                          for expiration in expirations for strike in strikes]

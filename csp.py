@@ -8,7 +8,7 @@ import json
 
 DELTA = 0.3
 EXPIRY_START = 2
-EXPIRY_END = 35
+EXPIRY_END = 40
 RETURN_TOTAL_DAYS = 30
 
 class LowDeltaOptionFetcher(OptionBase):
@@ -44,7 +44,12 @@ class LowDeltaOptionFetcher(OptionBase):
 
             if market_data.modelGreeks:
                 delta = market_data.modelGreeks.delta
+                gamma = market_data.modelGreeks.gamma
+                vega = market_data.modelGreeks.vega
+                theta = market_data.modelGreeks.theta
+                implied_volatility = market_data.modelGreeks.impliedVol
                 bid_price = market_data.bid
+
                 if delta and abs(delta) < DELTA:
                     self.logger.info("CONTRACT PASSES")
                     obj = {
@@ -52,16 +57,20 @@ class LowDeltaOptionFetcher(OptionBase):
                         "stockPrice": stock_price,
                         'expiration': contract.lastTradeDateOrContractMonth,
                         'strike': contract.strike,
-                        'premium': bid_price*100,
-                        'premiumPerDay': (bid_price*100)/days_till_expiration,
+                        'premium': bid_price * 100,
+                        'premiumPerDay': (bid_price * 100) / days_till_expiration,
                         'DTE': days_till_expiration,
-                        'AmountNeededToBuyStock': contract.strike*100,
+                        'AmountNeededToBuyStock': contract.strike * 100,
                         'delta': delta,
-                        'impliedVolatility': market_data.modelGreeks.impliedVol,
-                        'bid': market_data.bid,
-                        f"percentageReturnPer{RETURN_TOTAL_DAYS}Days":  (((bid_price/days_till_expiration)*RETURN_TOTAL_DAYS) / contract.strike) * 100
+                        'bid': bid_price,
+                        f"percentageReturnPer{RETURN_TOTAL_DAYS}Days": (((bid_price / days_till_expiration) * RETURN_TOTAL_DAYS) / contract.strike) * 100,
+                        'impliedVolatility': implied_volatility,
+                        'gamma': gamma,
+                        'vega': vega,
+                        'theta': theta,
                     }
                     self.data.append(obj)
+
 
     def post_processing(self):
         import sys
