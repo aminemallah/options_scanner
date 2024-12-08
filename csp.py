@@ -78,16 +78,18 @@ class LowDeltaOptionFetcher(OptionBase):
 
 
 if __name__ == "__main__":
-    # from volatile_tickers import volatile_tickers
-    from fetch_stocks import MarketChameleonScraper
-    stocks_fetcher = MarketChameleonScraper()
-    volatile_tickers = json.loads(stocks_fetcher.load_page())
+    # from fetch_stocks import MarketChameleonScraper
+    # stocks_fetcher = MarketChameleonScraper()
+    # volatile_tickers = json.loads(stocks_fetcher.load_page())
+    
+    # from mag7 import stocks
+    # volatile_tickers_new = []
+    # for volatile_ticker in volatile_tickers:
+    #     if volatile_ticker['symbol'] in stocks:
+    #         volatile_tickers_new.append(volatile_ticker)
 
-    from mag7 import stocks
-    volatile_tickers_new = []
-    for volatile_ticker in volatile_tickers:
-        if volatile_ticker['symbol'] in stocks:
-            volatile_tickers_new.append(volatile_ticker)
+    import tradingview
+    volatile_tickers = tradingview.run()
 
     fetcher = LowDeltaOptionFetcher()
-    fetcher.process_tickers(volatile_tickers_new)
+    fetcher.process_tickers(volatile_tickers)
