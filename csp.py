@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import json
 
 DELTA = 0.3
-EXPIRY_START = 2
+EXPIRY_START = 25
 EXPIRY_END = 40
 RETURN_TOTAL_DAYS = 30
 
@@ -91,14 +91,14 @@ if __name__ == "__main__":
     # stocks_fetcher = MarketChameleonScraper()
     # volatile_tickers = json.loads(stocks_fetcher.load_page())
     
-    # from mag7 import stocks
-    # volatile_tickers_new = []
-    # for volatile_ticker in volatile_tickers:
-    #     if volatile_ticker['symbol'] in stocks:
-    #         volatile_tickers_new.append(volatile_ticker)
-
     import tradingview
     volatile_tickers = tradingview.run()
+
+    from mag7 import stocks
+    volatile_tickers_new = []
+    for volatile_ticker in volatile_tickers:
+        if volatile_ticker['symbol'] in stocks:
+            volatile_tickers_new.append(volatile_ticker)
 
     fetcher = LowDeltaOptionFetcher()
     fetcher.process_tickers(volatile_tickers)

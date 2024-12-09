@@ -5,13 +5,6 @@ stocks = [
     "AMZN",
     "META",
     "GOOGL",
-    "TSLA",
     "BRK.B",
-    "GOOG",
-    "AVGO",
-    "JPM",
-    "LLY",
-    "UNH",
-    "V",
-    "XOM"
+    "GOOG"
 ]
