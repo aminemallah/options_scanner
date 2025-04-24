@@ -56,3 +56,5 @@ def run():
         })
 
     return adapted_final_object
+
+# print(run())

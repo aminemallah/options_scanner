@@ -5,6 +5,37 @@ import yfinance as yf
 from datetime import datetime, timedelta
 import logging
 
+RETURN_TOTAL_DAYS = 30
+
+# csp
+DELTA_CSP = 0.3
+EXPIRY_START_CSP = 24
+EXPIRY_END_CSP = 41
+PERCENTAGE_RETURN_NOTIFY_CSP = 5.5
+STRIKE_RATIO_START = 0.95
+STRIKE_RATIO_END = 0.85
+
+# cc
+DELTA_CC = 0.3
+EXPIRY_START_CC = 24
+EXPIRY_END_CC = 81
+PERCENTAGE_RETURN_NOTIFY_CC = 1.5
+
+vars = {
+    'csp': {
+        'DELTA': DELTA_CSP,
+        'PERCENTAGE_RETURN_NOTIFY': PERCENTAGE_RETURN_NOTIFY_CSP,
+        'EXPIRY_START': EXPIRY_START_CSP,
+        'EXPIRY_END': EXPIRY_END_CSP
+    },
+    'cc': {
+        'DELTA': DELTA_CC,
+        'PERCENTAGE_RETURN_NOTIFY': PERCENTAGE_RETURN_NOTIFY_CC,
+        'EXPIRY_START': EXPIRY_START_CC,
+        'EXPIRY_END': EXPIRY_END_CC
+    }
+}
+
 logging.basicConfig(
     level=logging.INFO, 
     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -32,7 +63,7 @@ class OptionBase:
         market_price = stock_yf.history(period='1d')['Close'].iloc[-1]
         return market_price
 
-    def fetch_options_data(self, ticker_symbol, stock_price, expiry_start, expiry_end):
+    def fetch_options_data(self, ticker_symbol, stock_price, option_type, strike_ratio_start, strike_ratio_end):
         try:
             stock = Stock(ticker_symbol, 'SMART', 'USD')
             self.ib.qualifyContracts(stock)
@@ -48,13 +79,16 @@ class OptionBase:
                 return []
 
             today = datetime.now()
-            min_date = int((today + timedelta(days=expiry_start)).strftime('%Y%m%d'))
-            max_date = int((today + timedelta(days=expiry_end)).strftime('%Y%m%d'))
+            min_date = int((today + timedelta(days=vars[self.action_type]['EXPIRY_START'])).strftime('%Y%m%d'))
+            max_date = int((today + timedelta(days=vars[self.action_type]['EXPIRY_END'])).strftime('%Y%m%d'))
             expirations = [int(exp) for exp in chain.expirations if min_date <= int(exp) <= max_date]
 
-            strikes = [strike for strike in chain.strikes if stock_price * 0.85 < strike <= stock_price]
+            if option_type == 'C':
+                strikes = [strike for strike in chain.strikes if stock_price * strike_ratio_start <= strike <= stock_price * strike_ratio_end]
+            else:
+                strikes = [strike for strike in chain.strikes if stock_price * strike_ratio_end < strike <= stock_price * strike_ratio_start]
 
-            contracts = [Option(stock.symbol, expiration, strike, 'P', 'SMART')
+            contracts = [Option(stock.symbol, expiration, strike, option_type, 'SMART')
                          for expiration in expirations for strike in strikes]
             contracts = self.ib.qualifyContracts(*contracts)
 
@@ -67,20 +101,43 @@ class OptionBase:
     def save_to_excel(self):
         if self.data:
             df = pd.DataFrame(self.data)
-            today_date = datetime.now().strftime('%Y-%m-%d')  # Format the date as YYYY-MM-DD
-            file_name = f"data/{today_date}.xlsx"  # Add the .xlsx extension
-            df.to_excel(file_name, index=False)  # Save DataFrame to Excel without the index
+            today_date = datetime.now().strftime('%Y-%m-%d')
+            file_name = f"data/{today_date}-{self.action_type}.xlsx"
+            df.to_excel(file_name, index=False)
             self.logger.info(f"Data saved to {file_name}")
         else:
             self.logger.info("No data to save.")
 
-    def process_tickers(self, tickers):
+    def post_processing(self):
+        import sys
+        sys.path.append('../common')
+        import common_utils
+        keys_to_keep = [
+            'ticker',
+            'stockPrice',
+            'expiration',
+            'strike',
+            'premium',
+            'DTE',
+            '100StockValue',
+            'delta',
+            f'percentageReturnPer{RETURN_TOTAL_DAYS}Days'
+        ]
+        for data_obj in self.data:
+            if (data_obj['delta'] < vars[self.action_type]['DELTA'] and data_obj[f"percentageReturnPer{RETURN_TOTAL_DAYS}Days"] > vars[self.action_type]['PERCENTAGE_RETURN_NOTIFY']):
+                filtered_data = {key: data_obj[key] for key in keys_to_keep if key in data_obj}
+                filtered_data['action'] = self.action_type
+                message = "\n".join([f"{key}: {value}" for key, value in filtered_data.items()])
+                common_utils.notify_message_aleph(f"{message}")
+
+    def process_tickers(self, tickers, action_type):
+        self.action_type = action_type
         self.connect()
         for ticker in tickers:
             try:
                 self.logger.info(f"Processing ticker: {ticker['symbol']}")
                 stock_price = self.get_stock_price(ticker['symbol'])
-                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price, ticker['earnings_date'])
+                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price, ticker['earnings_date'], ticker['strike_ratio_start'], ticker['strike_ratio_end'])
             except Exception as e:
                 self.logger.error(e)
                 traceback.print_exc()

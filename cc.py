@@ -1,8 +1,4 @@
-# TO DO
-# keep spreads tight
-
 from option_base import OptionBase
-from datetime import datetime
 from datetime import datetime, timedelta
 import json
 
@@ -13,7 +9,7 @@ class LowDeltaOptionFetcher(OptionBase):
         contracts = self.fetch_options_data(
             ticker_symbol,
             stock_price,
-            option_type='P',
+            option_type='C',
             strike_ratio_start=strike_ratio_start,
             strike_ratio_end=strike_ratio_end
         )
@@ -58,10 +54,10 @@ class LowDeltaOptionFetcher(OptionBase):
                         'premium': bid_price * 100,
                         'premiumPerDay': (bid_price * 100) / days_till_expiration,
                         'DTE': days_till_expiration,
-                        'AmountNeededToBuyStock': contract.strike * 100,
+                        '100StockValue': stock_price * 100,
                         'delta': delta,
                         'bid': bid_price,
-                        f"percentageReturnPer{RETURN_TOTAL_DAYS}Days": (((bid_price / days_till_expiration) * RETURN_TOTAL_DAYS) / contract.strike) * 100,
+                        f"percentageReturnPer{RETURN_TOTAL_DAYS}Days": (((bid_price / days_till_expiration) * RETURN_TOTAL_DAYS) / stock_price) * 100,
                         'impliedVolatility': implied_volatility,
                         'gamma': gamma,
                         'vega': vega,
@@ -69,17 +65,15 @@ class LowDeltaOptionFetcher(OptionBase):
                     }
                     self.data.append(obj)
 
-if __name__ == "__main__":
 
+if __name__ == "__main__":
     stocks = [
-        {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_ratio_start': 0.85, 'strike_ratio_end': 0.8},
-        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "PLTR", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "VG", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60}
+        {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_ratio_start': 1.2, 'strike_ratio_end': 1.35},
+        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8},
+        {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8},
+        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8},
+        {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8}
     ]
 
     fetcher = LowDeltaOptionFetcher()
-    fetcher.process_tickers(stocks, action_type="csp")
+    fetcher.process_tickers(stocks, action_type="cc")
