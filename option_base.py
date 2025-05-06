@@ -19,7 +19,7 @@ STRIKE_RATIO_END = 0.85
 DELTA_CC = 0.3
 EXPIRY_START_CC = 24
 EXPIRY_END_CC = 81
-PERCENTAGE_RETURN_NOTIFY_CC = 1.5
+PERCENTAGE_RETURN_NOTIFY_CC = 1.9
 
 vars = {
     'csp': {
@@ -63,7 +63,7 @@ class OptionBase:
         market_price = stock_yf.history(period='1d')['Close'].iloc[-1]
         return market_price
 
-    def fetch_options_data(self, ticker_symbol, stock_price, option_type, strike_ratio_start, strike_ratio_end):
+    def fetch_options_data(self, ticker_symbol, stock_price, option_type, strike_value_start, strike_value_end):
         try:
             stock = Stock(ticker_symbol, 'SMART', 'USD')
             self.ib.qualifyContracts(stock)
@@ -83,20 +83,25 @@ class OptionBase:
             max_date = int((today + timedelta(days=vars[self.action_type]['EXPIRY_END'])).strftime('%Y%m%d'))
             expirations = [int(exp) for exp in chain.expirations if min_date <= int(exp) <= max_date]
 
-            if option_type == 'C':
-                strikes = [strike for strike in chain.strikes if stock_price * strike_ratio_start <= strike <= stock_price * strike_ratio_end]
-            else:
-                strikes = [strike for strike in chain.strikes if stock_price * strike_ratio_end < strike <= stock_price * strike_ratio_start]
+            # 🔄 Build strikes list from fixed values with 0.5 increments
+            strikes = []
+            current_strike = strike_value_start
+            while current_strike <= strike_value_end:
+                if current_strike in chain.strikes:
+                    strikes.append(current_strike)
+                current_strike = round(current_strike + 0.5, 2)
 
             contracts = [Option(stock.symbol, expiration, strike, option_type, 'SMART')
                          for expiration in expirations for strike in strikes]
             contracts = self.ib.qualifyContracts(*contracts)
 
             self.logger.info(f"Qualified {len(contracts)} contracts for {ticker_symbol}")
+            self.logger.info(contracts)
             return contracts
         except Exception as e:
             self.logger.error(f"Error processing {ticker_symbol}: {traceback.format_exc()}")
             return []
+
 
     def save_to_excel(self):
         if self.data:
@@ -137,7 +142,7 @@ class OptionBase:
             try:
                 self.logger.info(f"Processing ticker: {ticker['symbol']}")
                 stock_price = self.get_stock_price(ticker['symbol'])
-                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price, ticker['earnings_date'], ticker['strike_ratio_start'], ticker['strike_ratio_end'])
+                self.fetch_put_options_with_low_delta(ticker['symbol'], stock_price, ticker['earnings_date'], ticker['strike_value_start'], ticker['strike_value_end'])
             except Exception as e:
                 self.logger.error(e)
                 traceback.print_exc()

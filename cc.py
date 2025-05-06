@@ -5,13 +5,13 @@ import json
 RETURN_TOTAL_DAYS = 30
 
 class LowDeltaOptionFetcher(OptionBase):
-    def fetch_put_options_with_low_delta(self, ticker_symbol, stock_price, earnings_date, strike_ratio_start, strike_ratio_end):
+    def fetch_put_options_with_low_delta(self, ticker_symbol, stock_price, earnings_date, strike_value_start, strike_value_end):
         contracts = self.fetch_options_data(
             ticker_symbol,
             stock_price,
             option_type='C',
-            strike_ratio_start=strike_ratio_start,
-            strike_ratio_end=strike_ratio_end
+            strike_value_start=strike_value_start,
+            strike_value_end=strike_value_end
         )
 
         if earnings_date:
@@ -68,11 +68,11 @@ class LowDeltaOptionFetcher(OptionBase):
 
 if __name__ == "__main__":
     stocks = [
-        {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_ratio_start': 1.2, 'strike_ratio_end': 1.35},
-        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8},
-        {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8},
-        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8},
-        {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_ratio_start': 1.5, 'strike_ratio_end': 1.8}
+        {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_value_start': 130, 'strike_value_end': 135},
+        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_value_start': 75, 'strike_value_end': 85},
+        {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_value_start': 15, 'strike_value_end': 16},
+        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_value_start': 39, 'strike_value_end': 41},
+        # {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_value_start': 1.5, 'strike_value_end': 1.8}
     ]
 
     fetcher = LowDeltaOptionFetcher()

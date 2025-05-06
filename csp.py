@@ -9,13 +9,13 @@ import json
 RETURN_TOTAL_DAYS = 30
 
 class LowDeltaOptionFetcher(OptionBase):
-    def fetch_put_options_with_low_delta(self, ticker_symbol, stock_price, earnings_date, strike_ratio_start, strike_ratio_end):
+    def fetch_put_options_with_low_delta(self, ticker_symbol, stock_price, earnings_date, strike_value_start, strike_value_end):
         contracts = self.fetch_options_data(
             ticker_symbol,
             stock_price,
             option_type='P',
-            strike_ratio_start=strike_ratio_start,
-            strike_ratio_end=strike_ratio_end
+            strike_value_start=strike_value_start,
+            strike_value_end=strike_value_end
         )
 
         if earnings_date:
@@ -72,13 +72,14 @@ class LowDeltaOptionFetcher(OptionBase):
 if __name__ == "__main__":
 
     stocks = [
-        {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_ratio_start': 0.85, 'strike_ratio_end': 0.8},
-        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "PLTR", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60},
-        {'symbol': "VG", 'earnings_date': "19700101", 'strike_ratio_start': 0.80, 'strike_ratio_end': 0.60}
+        {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_value_start': 80, 'strike_value_end': 90},
+        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_value_start': 34, 'strike_value_end': 40},
+        # {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_value_start': 10, 'strike_value_end': 11},
+        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_value_start': 15, 'strike_value_end': 17.5},
+        {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_value_start': 16.5, 'strike_value_end': 18},
+        {'symbol': "PLTR", 'earnings_date': "19700101", 'strike_value_start': 60, 'strike_value_end': 70},
+        {'symbol': "HIMS", 'earnings_date': "19700101", 'strike_value_start': 20, 'strike_value_end': 25}
+        # {'symbol': "VG", 'earnings_date': "19700101", 'strike_value_start': 8, 'strike_value_end': 7.5}
     ]
 
     fetcher = LowDeltaOptionFetcher()
