@@ -31,7 +31,7 @@ class LowDeltaOptionFetcher(OptionBase):
                 continue
 
             market_data = self.ib.reqMktData(contract, '', snapshot=True)
-            self.ib.sleep(10)
+            self.ib.sleep(15)
             self.logger.info(market_data)
             self.ib.cancelMktData(contract)
             self.ib.sleep(2)

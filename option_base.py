@@ -1,5 +1,6 @@
 import traceback
-from ib_insync import IB, Stock, Option
+from ib_async import IB, Stock, Option
+# from ib_insync import IB, Stock, Option
 import pandas as pd
 import yfinance as yf
 from datetime import datetime, timedelta
@@ -21,6 +22,12 @@ EXPIRY_START_CC = 24
 EXPIRY_END_CC = 81
 PERCENTAGE_RETURN_NOTIFY_CC = 1.9
 
+# c
+DELTA_C = 0.9
+EXPIRY_START_C = 200
+EXPIRY_END_C = 300
+RETURN_MULTIPLE = 10
+
 vars = {
     'csp': {
         'DELTA': DELTA_CSP,
@@ -33,6 +40,12 @@ vars = {
         'PERCENTAGE_RETURN_NOTIFY': PERCENTAGE_RETURN_NOTIFY_CC,
         'EXPIRY_START': EXPIRY_START_CC,
         'EXPIRY_END': EXPIRY_END_CC
+    },
+    'c': {
+        'DELTA': DELTA_C,
+        'RETURN_MULTIPLE': RETURN_MULTIPLE,
+        'EXPIRY_START': EXPIRY_START_C,
+        'EXPIRY_END': EXPIRY_END_C
     }
 }
 
@@ -46,8 +59,39 @@ logging.basicConfig(
 class OptionBase:
     def __init__(self):
         self.ib = IB()
+        self.ib.errorEvent += self.on_error
         self.data = []
         self.logger = logging
+
+    def on_error(self, reqId, errorCode, errorString, contract=None):
+        if errorCode == 10197:
+            self.logger.error(f"Custom Handler: Market data unavailable due to competing live session (reqId={reqId})")
+            self.error_10197_occurred = True
+
+    def custom_reqMktData(self, contract):
+        max_retries = 1
+        retry_delay = 60
+        retry_count = 0
+        while True:
+            self.error_10197_occurred = False
+            self.logger.info(f"ATTEMPTING TO REQUEST MARKET DATA (attempt {retry_count + 1})")
+
+            market_data = self.ib.reqMktData(contract, '', snapshot=True)
+            self.logger.info("WAITING 15 SECONDS FOR MARKET DATA")
+            self.ib.sleep(15)
+            self.logger.info("MARKET DATA REQUEST DONE")
+
+            if self.error_10197_occurred:
+                self.logger.warning("⚠️ Market data error 10197 occurred: competing live session.")
+                retry_count += 1
+                if retry_count >= max_retries:
+                    self.logger.error("Max retries reached. Aborting market data request.")
+                    return market_data
+                self.logger.info(f"Retrying in {retry_delay} seconds...")
+                self.ib.sleep(retry_delay)
+            else:
+                self.logger.info("✅ Market data request successful.")
+                return market_data
 
     def connect(self):
         try:
@@ -126,10 +170,24 @@ class OptionBase:
             'DTE',
             '100StockValue',
             'delta',
-            f'percentageReturnPer{RETURN_TOTAL_DAYS}Days'
+            f'percentageReturnPer{RETURN_TOTAL_DAYS}Days',
+            'ticker',
+            'longStrike',
+            'shortStrike',
+            'spread',
+            'askLong',
+            'bidShort',
+            'netDebit',
+            'returnMultiple'
         ]
         for data_obj in self.data:
-            if (data_obj['delta'] < vars[self.action_type]['DELTA'] and data_obj[f"percentageReturnPer{RETURN_TOTAL_DAYS}Days"] > vars[self.action_type]['PERCENTAGE_RETURN_NOTIFY']):
+            if (
+                (f"percentageReturnPer{RETURN_TOTAL_DAYS}Days" in data_obj and
+                (data_obj[f"percentageReturnPer{RETURN_TOTAL_DAYS}Days"] > vars[self.action_type]['PERCENTAGE_RETURN_NOTIFY']))
+                or 
+                ("returnMultiple" in data_obj and
+                (data_obj["returnMultiple"] >= vars[self.action_type]['RETURN_MULTIPLE']))
+                ):
                 filtered_data = {key: data_obj[key] for key in keys_to_keep if key in data_obj}
                 filtered_data['action'] = self.action_type
                 message = "\n".join([f"{key}: {value}" for key, value in filtered_data.items()])

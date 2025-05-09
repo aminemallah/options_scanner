@@ -1,6 +1,3 @@
-# TO DO
-# keep spreads tight
-
 from option_base import OptionBase
 from datetime import datetime
 from datetime import datetime, timedelta
@@ -34,9 +31,7 @@ class LowDeltaOptionFetcher(OptionBase):
                 self.logger.info("CONTRACT FAILS: Expiration date is too close to earnings date.")
                 continue
 
-            market_data = self.ib.reqMktData(contract, '', snapshot=True)
-            self.ib.sleep(10)
-            self.logger.info(market_data)
+            market_data = self.custom_reqMktData(contract)
             self.ib.cancelMktData(contract)
             self.ib.sleep(2)
 
@@ -67,19 +62,19 @@ class LowDeltaOptionFetcher(OptionBase):
                         'vega': vega,
                         'theta': theta,
                     }
+                    self.logger.info(obj)
                     self.data.append(obj)
 
 if __name__ == "__main__":
 
     stocks = [
         {'symbol': "NVDA", 'earnings_date': "19700101", 'strike_value_start': 80, 'strike_value_end': 90},
-        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_value_start': 34, 'strike_value_end': 40},
-        # {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_value_start': 10, 'strike_value_end': 11},
-        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_value_start': 15, 'strike_value_end': 17.5},
+        {'symbol': "HOOD", 'earnings_date': "19700101", 'strike_value_start': 34, 'strike_value_end': 38},
+        {'symbol': "SOFI", 'earnings_date': "19700101", 'strike_value_start': 10, 'strike_value_end': 11},
+        {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_value_start': 15, 'strike_value_end': 17},
         {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_value_start': 16.5, 'strike_value_end': 18},
         {'symbol': "PLTR", 'earnings_date': "19700101", 'strike_value_start': 60, 'strike_value_end': 70},
-        {'symbol': "HIMS", 'earnings_date': "19700101", 'strike_value_start': 20, 'strike_value_end': 25}
-        # {'symbol': "VG", 'earnings_date': "19700101", 'strike_value_start': 8, 'strike_value_end': 7.5}
+        {'symbol': "HIMS", 'earnings_date': "19700101", 'strike_value_start': 20, 'strike_value_end': 22}
     ]
 
     fetcher = LowDeltaOptionFetcher()
