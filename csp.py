@@ -74,7 +74,7 @@ if __name__ == "__main__":
         {'symbol': "RKLB", 'earnings_date': "19700101", 'strike_value_start': 15, 'strike_value_end': 17},
         {'symbol': "ASTS", 'earnings_date': "19700101", 'strike_value_start': 16.5, 'strike_value_end': 18},
         {'symbol': "PLTR", 'earnings_date': "19700101", 'strike_value_start': 60, 'strike_value_end': 70},
-        {'symbol': "HIMS", 'earnings_date': "19700101", 'strike_value_start': 20, 'strike_value_end': 22}
+        {'symbol': "HIMS", 'earnings_date': "19700101", 'strike_value_start': 30, 'strike_value_end': 35}
     ]
 
     fetcher = LowDeltaOptionFetcher()
